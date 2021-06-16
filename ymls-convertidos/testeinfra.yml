@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testeinfra-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: testeinfra
+  template:
+    metadata:
+      labels:
+        app: testeinfra
+    spec:
+      containers:
+        - name: app
+          image: robertotrevisan/softdesign-testeinfra:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+          - configMapRef:
+            name: mongo-config
+          #env:
+          #  - name: MONGO_URL
+          #    value: mongodb://mongo:27017
+          imagePullPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: testeinfra-service
+spec:
+  selector:
+    app: testeinfra
+  ports:
+    - port: 80
+      targetPort: 3000
+  #type: LoadBalancer
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: testeinfra-ingress
+  namespace: default
+spec:
+  rules:
+  - host: testeinfra.soft.robertotrevisan.com.br
+    http:
+      paths:
+      - backend:
+          serviceName: testeinfra-service
+          servicePort: 80
+status:
+  loadBalancer: {}

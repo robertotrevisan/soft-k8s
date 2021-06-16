@@ -1,0 +1,34 @@
+#!/bin/sh
+#####	NOME:				k3s-master.sh
+#####	VERSÃO:				1.0
+#####	DESCRIÇÃO:			Cria uma instancia EC2 de  um K3s Master - Kubernetes Lightweight.
+#####	DATA DA CRIAÇÃO:	13/06/2021
+#####	ESCRITO POR:		Roberto P. Trevisan
+#####	E-MAIL:				trevisan@gmail.com
+#####	DISTRO:				Debian GNU/Linux
+#####	LICENÇA:			GPLv3
+#####	PROJETO:			https://github.com/robertotrevisan/soft-kubernetes.git
+
+##### Variaveis
+INSTANCE_NUMER="1"
+INSTANCE_TYPE="t3.medium"
+AWS_CLI_PROFILE="awstrevisan"
+AWS_PEM="id_trevisan"
+AWS_SECURITY_GROUP="sg-xxxx" ## Substituir por uma válida
+AWS_SUBNET="subnet-xxx"      ## Substituir por uma válida
+
+##### CREATE RANCHER SERVER
+echo "Criando k3s Master Server..."
+aws ec2 run-instances \
+    --profile $AWS_CLI_PROFILE \
+    --image-id ami-0dba2cb6798deb6d8 \
+    --count $INSTANCE_NUMER \
+    --instance-type $INSTANCE_TYPE \
+    --key-name $AWS_PEM \
+    --security-group-ids $AWS_SECURITY_GROUP \
+    --subnet-id $AWS_SUBNET \
+    --ebs-optimized \
+    --block-device-mapping "[ { \"DeviceName\": \"/dev/sda1\", \"Ebs\": { \"VolumeSize\": 30 } } ]" \
+    --user-data file://scripts/k3s.sh \
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=k3s-master}]' 'ResourceType=volume,Tags=[{Key=Name,Value=k3s-master}]' \
+    --output table
